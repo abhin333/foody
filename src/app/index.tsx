@@ -1,98 +1,131 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  FlatList,
+  StyleSheet,
+  StatusBar,
+  useColorScheme,
+} from "react-native";
+
+import Header from "../components/Header";
+import SearchBar from "../components/SearchBar";
+import CategoryCard from "../components/CategoryCard";
+
+import { useState } from "react";
+import { categories } from "../constants/categories";
+import { foods } from "@/constants/foods";
+import FoodCard from "@/components/FoodCard";
+import Pagination from "@/components/Pagination";
+import FloatingCart from "@/components/FloatingCart";
 import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+export default function Home() {
+  const [selected, setSelected] = useState(1);
 
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
-  }
-  if (Device.isDevice) {
-    return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
-    );
-  }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
+  const isDark = useColorScheme() === "dark";
+
   return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
-  );
-}
+    <SafeAreaView style={styles.container}>
+  <StatusBar barStyle="dark-content" />
 
-export default function HomeScreen() {
-  return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
+  <FlatList
+    data={foods}
+    numColumns={2}
+    keyExtractor={(item) => item.id.toString()}
+    renderItem={({ item }) => <FoodCard item={item} />}
+    showsVerticalScrollIndicator={false}
+    contentContainerStyle={{
+      paddingHorizontal: 20,
+      paddingBottom: 120,
+    }}
+    ListHeaderComponent={
+      <>
+        <Header />
 
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
+        <Text style={styles.title}>
+          Choose the Food You Love
+        </Text>
 
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-          />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
+        <SearchBar />
 
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
+        <Text style={styles.categoryTitle}>
+          Category
+        </Text>
+
+        <FlatList
+          horizontal
+          data={categories}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item }) => (
+            <CategoryCard
+              item={item}
+              selected={selected === item.id}
+              onPress={() => setSelected(item.id)}
+            />
+          )}
+          showsHorizontalScrollIndicator={false}
+        />
+
+        <Text style={styles.categoryChip}>
+          BURGERS
+        </Text>
+      </>
+    }
+    ListFooterComponent={
+      <>
+        <Pagination />
+      </>
+    }
+  />
+
+  <FloatingCart />
+</SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
   },
-  safeArea: {
+
+  content: {
     flex: 1,
-    paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
+    paddingHorizontal: 20,
   },
-  heroSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
-  },
+
   title: {
-    textAlign: 'center',
+    fontSize: 26,
+    fontWeight: "700",
+    marginTop: 25,
+    color: "#333",
   },
-  code: {
-    textTransform: 'uppercase',
+
+  categoryTitle: {
+    marginVertical: 20,
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#333",
   },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
+  categoryChip: {
+    alignSelf: "flex-start",
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    paddingHorizontal: 18,
+    paddingVertical: 7,
+    fontWeight: "700",
+    fontSize: 12,
+    color: "#444",
+    marginVertical: 20,
+    elevation: 2,
   },
+  categoryList:{
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+  }
 });
