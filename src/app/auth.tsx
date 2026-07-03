@@ -1,90 +1,127 @@
-import React, { useState } from 'react';
+import { useState } from "react";
 import {
-  View,
-  Text,
-  Image,
-  TouchableOpacity,
-  StyleSheet,
   Dimensions,
-  TextInput,
-  Alert, // Added for showing error messages
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import {
-  ScrollView,
+  Image,
   KeyboardAvoidingView,
   Platform,
-} from 'react-native';
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
-import { Feather } from '@expo/vector-icons';
+import { Feather } from "@expo/vector-icons";
+import { router } from "expo-router";
+import { Alert } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+const { width } = Dimensions.get("window");
 
-const { width } = Dimensions.get('window');
+import { auth } from "../firebase/config";
+
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  updateProfile,
+} from "firebase/auth";
 
 export default function AuthScreen() {
   const [isLogin, setIsLogin] = useState(true);
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false); // Handle loading state
 
-  // 2. Handle Firebase Submit Action
-  // const handleSubmit = async () => {
-  //   if (!email || !password) {
-  //     Alert.alert('Error', 'Please fill in email and password.');
-  //     return;
-  //   }
+  const handleSubmit = async () => {
+    if (!email.trim() || !password.trim()) {
+      Alert.alert("Error", "Email and Password are required.");
+      return;
+    }
 
-  //   setLoading(true);
+    setLoading(true);
 
-  //   try {
-  //     if (isLogin) {
-  //       // --- LOG IN ---
-  //       await auth().signInWithEmailAndPassword(email.trim(), password);
-  //       Alert.alert('Success', 'Logged in successfully!');
-  //     } else {
-  //       // --- SIGN UP ---
-  //       if (password !== confirmPassword) {
-  //         Alert.alert('Error', 'Passwords do not match!');
-  //         setLoading(false);
-  //         return;
-  //       }
-        
-  //       const userCredential = await auth().createUserWithEmailAndPassword(email.trim(), password);
-        
-  //       // Optional: Update the user's display name profile in Firebase
-  //       if (name) {
-  //         await userCredential.user.updateProfile({ displayName: name });
-  //       }
-        
-  //       Alert.alert('Success', 'Account created successfully!');
-  //     }
-  //   } catch (error) {
-  //     console.error(error);
-  //     // Friendly error handling
-  //     if (error.code === 'auth/email-already-in-use') {
-  //       Alert.alert('Error', 'That email address is already in use!');
-  //     } else if (error.code === 'auth/invalid-email') {
-  //       Alert.alert('Error', 'That email address is invalid!');
-  //     } else if (error.code === 'auth/wrong-password') {
-  //       Alert.alert('Error', 'Incorrect password.');
-  //     } else {
-  //       Alert.alert('Authentication Error', error.message);
-  //     }
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
+    try {
+      if (isLogin) {
+        // LOGIN
+        await signInWithEmailAndPassword(auth, email.trim(), password);
+        Alert.alert("Success", "Login Successful");
 
+        router.replace("/");
+      } else {
+        // SIGN UP
+
+        if (!name.trim()) {
+          Alert.alert("Error", "Please enter your name.");
+          setLoading(false);
+          return;
+        }
+
+        if (password !== confirmPassword) {
+          Alert.alert("Error", "Passwords do not match.");
+          setLoading(false);
+          return;
+        }
+
+        const userCredential = await createUserWithEmailAndPassword(
+          auth,
+          email.trim(),
+          password,
+        );
+
+        await updateProfile(userCredential.user, {
+          displayName: name,
+        });
+
+        Alert.alert("Success", "Account created successfully.");
+
+        router.replace("/");
+      }
+    } catch (error: any) {
+      console.log(error);
+
+      switch (error.code) {
+        case "auth/email-already-in-use":
+          Alert.alert("Error", "Email is already registered.");
+          break;
+
+        case "auth/invalid-email":
+          Alert.alert("Error", "Invalid email address.");
+          break;
+
+        case "auth/user-not-found":
+          Alert.alert("Error", "No account found with this email.");
+          break;
+
+        case "auth/wrong-password":
+          Alert.alert("Error", "Incorrect password.");
+          break;
+
+        case "auth/invalid-credential":
+          Alert.alert("Error", "Invalid email or password.");
+          break;
+
+        case "auth/weak-password":
+          Alert.alert("Error", "Password should be at least 6 characters.");
+          break;
+
+        default:
+          Alert.alert("Error", error.message);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <ScrollView
           showsVerticalScrollIndicator={false}
@@ -96,7 +133,7 @@ export default function AuthScreen() {
         >
           {/* Top Banner */}
           <Image
-            source={require('../../assets/images/burger.png')}
+            source={require("../../assets/images/burger.png")}
             style={styles.banner}
           />
 
@@ -106,30 +143,20 @@ export default function AuthScreen() {
             <View style={styles.toggleContainer}>
               <TouchableOpacity
                 onPress={() => setIsLogin(true)}
-                style={[
-                  styles.toggleButton,
-                  isLogin && styles.activeButton,
-                ]}>
-                <Text
-                  style={[
-                    styles.toggleText,
-                    isLogin && styles.activeText,
-                  ]}>
+                style={[styles.toggleButton, isLogin && styles.activeButton]}
+              >
+                <Text style={[styles.toggleText, isLogin && styles.activeText]}>
                   Login
                 </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 onPress={() => setIsLogin(false)}
-                style={[
-                  styles.toggleButton,
-                  !isLogin && styles.activeButton,
-                ]}>
+                style={[styles.toggleButton, !isLogin && styles.activeButton]}
+              >
                 <Text
-                  style={[
-                    styles.toggleText,
-                    !isLogin && styles.activeText,
-                  ]}>
+                  style={[styles.toggleText, !isLogin && styles.activeText]}
+                >
                   Sign Up
                 </Text>
               </TouchableOpacity>
@@ -137,13 +164,11 @@ export default function AuthScreen() {
 
             <View style={{ marginTop: 40 }}>
               <Text style={styles.heading}>
-                {isLogin ? 'Login' : 'Create Account'}
+                {isLogin ? "Login" : "Create Account"}
               </Text>
 
-              <Text style={styles.subHeading}>
-                Welcome to Foody App
-              </Text>
-              
+              <Text style={styles.subHeading}>Welcome to Foody App</Text>
+
               <View>
                 {/* 3. Conditional Input Fields (Only show on Sign Up) */}
                 {!isLogin && (
@@ -190,7 +215,7 @@ export default function AuthScreen() {
                     onPress={() => setShowPassword(!showPassword)}
                   >
                     <Feather
-                      name={showPassword ? 'eye' : 'eye-off'}
+                      name={showPassword ? "eye" : "eye-off"}
                       size={20}
                       color="#666"
                     />
@@ -212,9 +237,10 @@ export default function AuthScreen() {
                       <TouchableOpacity
                         onPress={() =>
                           setShowConfirmPassword(!showConfirmPassword)
-                        }>
+                        }
+                      >
                         <Feather
-                          name={showConfirmPassword ? 'eye' : 'eye-off'}
+                          name={showConfirmPassword ? "eye" : "eye-off"}
                           size={20}
                           color="#666"
                         />
@@ -226,13 +252,13 @@ export default function AuthScreen() {
             </View>
 
             {/* 4. Trigger handleSubmit here */}
-            <TouchableOpacity 
-              style={[styles.submitButton, loading && { opacity: 0.7 }]} 
-              // onPress={handleSubmit}
+            <TouchableOpacity
+              style={[styles.submitButton, loading && { opacity: 0.7 }]}
+              onPress={handleSubmit}
               disabled={loading}
             >
               <Text style={styles.submitText}>
-                {loading ? 'PROCESSING...' : (isLogin ? 'LOGIN' : 'SIGN UP')}
+                {loading ? "PROCESSING..." : isLogin ? "LOGIN" : "SIGN UP"}
               </Text>
             </TouchableOpacity>
 
@@ -265,7 +291,7 @@ export default function AuthScreen() {
                   ? "Don't have an account? "
                   : "Already have an account? "}
                 <Text style={styles.linkText}>
-                  {isLogin ? 'Sign Up' : 'Login'}
+                  {isLogin ? "Sign Up" : "Login"}
                 </Text>
               </Text>
             </TouchableOpacity>
@@ -273,7 +299,7 @@ export default function AuthScreen() {
 
           {/* Bottom Decoration */}
           <Image
-            source={require('../../assets/images/burger.png')}
+            source={require("../../assets/images/burger.png")}
             style={styles.bottomImage}
           />
         </ScrollView>
@@ -284,28 +310,69 @@ export default function AuthScreen() {
 
 // Keeping your existing styles below (Make sure styles like container, banner, card, etc., are defined here)
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
-  banner: { width: width, height: 200, resizeMode: 'cover' },
-  card: { padding: 20, backgroundColor: '#fff', borderTopLeftRadius: 30, borderTopRightRadius: 30, marginTop: -30 },
-  toggleContainer: { flexDirection: 'row', justifyContent: 'center' },
-  toggleButton: { paddingVertical: 10, paddingHorizontal: 20, borderRadius: 20 },
-  activeButton: { backgroundColor: '#FF9F1C' },
-  toggleText: { color: '#666', fontWeight: 'bold' },
-  activeText: { color: '#fff' },
-  heading: { fontSize: 28, fontWeight: 'bold', color: '#333' },
-  subHeading: { fontSize: 16, color: '#666', marginTop: 5, marginBottom: 20 },
-  inputLabel: { fontSize: 14, color: '#333', fontWeight: '600', marginTop: 15 },
-  input: { borderBottomWidth: 1, borderBottomColor: '#ccc', paddingVertical: 8, fontSize: 16 },
-  passwordContainer: { flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: '#ccc' },
+  container: { flex: 1, backgroundColor: "#fff" },
+  banner: { width: width, height: 200, resizeMode: "cover" },
+  card: {
+    padding: 20,
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    marginTop: -30,
+  },
+  toggleContainer: { flexDirection: "row", justifyContent: "center" },
+  toggleButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+  },
+  activeButton: { backgroundColor: "#FF9F1C" },
+  toggleText: { color: "#666", fontWeight: "bold" },
+  activeText: { color: "#fff" },
+  heading: { fontSize: 28, fontWeight: "bold", color: "#333" },
+  subHeading: { fontSize: 16, color: "#666", marginTop: 5, marginBottom: 20 },
+  inputLabel: { fontSize: 14, color: "#333", fontWeight: "600", marginTop: 15 },
+  input: {
+    borderBottomWidth: 1,
+    borderBottomColor: "#ccc",
+    paddingVertical: 8,
+    fontSize: 16,
+  },
+  passwordContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderBottomWidth: 1,
+    borderBottomColor: "#ccc",
+  },
   passwordInput: { flex: 1, paddingVertical: 8, fontSize: 16 },
-  submitButton: { backgroundColor: '#FF9F1C', paddingVertical: 15, borderRadius: 10, alignItems: 'center', marginTop: 30 },
-  submitText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
-  orContainer: { flexDirection: 'row', alignItems: 'center', marginVertical: 20 },
-  line: { flex: 1, height: 1, backgroundColor: '#ccc' },
-  orText: { marginHorizontal: 10, color: '#666' },
-  socialContainer: { flexDirection: 'row', justifyContent: 'center', gap: 20 },
-  socialButton: { padding: 10, borderWidth: 1, borderColor: '#ccc', borderRadius: 50 },
-  bottomText: { textAlign: 'center', color: '#666' },
-  linkText: { color: '#FF9F1C', fontWeight: 'bold' },
-  bottomImage: { width: 100, height: 100, alignSelf: 'center', marginTop: 20, opacity: 0.2 }
+  submitButton: {
+    backgroundColor: "#FF9F1C",
+    paddingVertical: 15,
+    borderRadius: 10,
+    alignItems: "center",
+    marginTop: 30,
+  },
+  submitText: { color: "#fff", fontSize: 18, fontWeight: "bold" },
+  orContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 20,
+  },
+  line: { flex: 1, height: 1, backgroundColor: "#ccc" },
+  orText: { marginHorizontal: 10, color: "#666" },
+  socialContainer: { flexDirection: "row", justifyContent: "center", gap: 20 },
+  socialButton: {
+    padding: 10,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 50,
+  },
+  bottomText: { textAlign: "center", color: "#666" },
+  linkText: { color: "#FF9F1C", fontWeight: "bold" },
+  bottomImage: {
+    width: 100,
+    height: 100,
+    alignSelf: "center",
+    marginTop: 20,
+    opacity: 0.2,
+  },
 });
