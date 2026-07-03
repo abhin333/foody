@@ -36,7 +36,7 @@ export default function Details() {
         </TouchableOpacity>
 
         <Image
-          source={require("../../../assets/images/avatar.png")}
+          source={require("../../../assets/images/avatar.webp")}
           style={styles.avatar}
         />
       </View>

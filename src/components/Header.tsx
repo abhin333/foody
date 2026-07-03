@@ -50,7 +50,7 @@ export default function Header() {
           onPress={() => setLogoutModalVisible(true)}
         >
           <Image
-            source={require("../../assets/images/avatar.png")}
+            source={require("../../assets/images/avatar.webp")}
             style={styles.avatar}
           />
         </TouchableOpacity>

@@ -15,7 +15,8 @@
         "foregroundImage": "./assets/images/foodyicon.png",
         "backgroundColor": "#ffffff"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.abhin333.foody"
     },
     "web": {
       "output": "static",
@@ -30,12 +31,17 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
-      ],
-    
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "9140d8d4-bfac-42d0-ac9c-b680fdec98f4"
+      }
     }
   }
 }
