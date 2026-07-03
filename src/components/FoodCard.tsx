@@ -2,17 +2,19 @@ import React from "react";
 import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
 
 import { FontAwesome } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { type Href, router } from "expo-router";
+
+import { Food } from "@/constants/foods";
 
 interface Props {
-  item: any;
+  item: Food;
 }
 
 export default function FoodCard({ item }: Props) {
   return (
     <TouchableOpacity
       activeOpacity={0.8}
-      onPress={() => router.push("/details")}
+      onPress={() => router.push(`/details/${item.id}` as Href)}
       style={[styles.card, item.selected && styles.selectedCard]}
     >
       <Image source={item.image} style={styles.image} />
