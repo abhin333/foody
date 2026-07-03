@@ -1,40 +1,37 @@
 import {
-    FlatList,
-    StatusBar,
-    StyleSheet,
-    Text,
-    useColorScheme,
-  } from "react-native";
+  FlatList,
+  StatusBar,
+  StyleSheet,
+  Text,
+} from "react-native";
   
   import CategoryCard from "../components/CategoryCard";
   import Header from "../components/Header";
   import SearchBar from "../components/SearchBar";
   
-  import FloatingCart from "@/components/FloatingCart";
-  import FoodCard from "@/components/FoodCard";
-  import Pagination from "@/components/Pagination";
-  import { foods } from "@/constants/foods";
-  import { router } from "expo-router";
-  import { useState } from "react";
-  import { SafeAreaView } from "react-native-safe-area-context";
-  import { categories } from "../constants/categories";
-  import { useEffect } from "react";
-  import { onAuthStateChanged } from "firebase/auth";
-  import { auth } from "../firebase/config";
-  
-  export default function Home() {
-   
-  
-    const [selected, setSelected] = useState(1);
-  
-    const isDark = useColorScheme() === "dark";
+import FloatingCart from "@/components/FloatingCart";
+import FoodCard from "@/components/FoodCard";
+import Pagination from "@/components/Pagination";
+import { getFoodsByCategory } from "@/constants/foods";
+import { useState } from "react";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { categories } from "../constants/categories";
+
+export default function Home() {
+  const [selected, setSelected] = useState(1);
+
+  const selectedCategory = categories.find(
+    (category) => category.id === selected
+  );
+  const filteredFoods = getFoodsByCategory(selected);
   
     return (
       <SafeAreaView style={styles.container}>
         <StatusBar barStyle="dark-content" />
   
         <FlatList
-          data={foods}
+          data={filteredFoods}
+          extraData={selected}
           numColumns={2}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => <FoodCard item={item} />}
@@ -67,7 +64,9 @@ import {
                 showsHorizontalScrollIndicator={false}
               />
   
-              <Text style={styles.categoryChip}>BURGERS</Text>
+              <Text style={styles.categoryChip}>
+                {selectedCategory?.chipLabel}
+              </Text>
             </>
           }
           ListFooterComponent={
